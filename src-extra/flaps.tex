@@ -1,38 +1,32 @@
-\documentclass{article}
+\documentclass{letter}
+\usepackage{geometry}
 \usepackage{tikz}
-\usepackage{pgffor}
-\usepackage{mdframed}
-\usepackage{multicol}
+\usepackage{fontspec}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyfoot{}
 
-\usetikzlibrary{calc}
+\geometry{ 
+ a4paper,
+ left=30mm,
+ top=10mm,
+ }
 
-\newcommand{\hsplit}[3]{%
-  \begin{tikzpicture}
-    \begin{scope}
-      \node[inner sep=0pt,outer sep=0pt] (a) {\phantom{#1}};
-      \clip (a.south east) rectangle ($(a.west)$);
-      \node[inner sep=0pt,outer sep=0pt,text=#2]  {#1};
-    \end{scope}
-    \clip (a.north east) rectangle ($(a.west)$);
-      \node[inner sep=0pt,outer sep=0pt,text=#3]  {#1};
+\newcommand{\hsep}[1]{%
+  \fontsize{210pt}{0}
+  \begin{tikzpicture} 
+    \draw (0,0) rectangle (4.6cm, 5.6cm);
+    \draw [color=lightgray] (0,2.8cm) -- (4.6cm, 2.8cm);
+    \node [anchor=south east, overlay] at (6.3,-2.3) {#1};
   \end{tikzpicture}
 }
 
-\newcommand{\hsep}[1]{%
-  \begin{mdframed}[userdefinedwidth=100pt,userdefinedheight=50pt]
-    \begin{center}
-      \hsplit{#1}{white}{black}      
-    \end{center}
-  \end{mdframed}
-  \begin{mdframed}[userdefinedwidth=100pt]
-    \begin{center}
-      \hsplit{#1}{black}{white}      
-    \end{center}
-  \end{mdframed}
-}
-
 \begin{document}
-\begin{multicols}{3}
-\foreach \n in {0,...,9}{\fontsize{100pt}{0}\hsep{\n}} 
-\end{multicols}
+\setmainfont{Bebas Neue}
+\hsep{0}\hsep{1}\hsep{2}\par
+\hsep{3}\hsep{4}\hsep{5}\par
+\hsep{6}\hsep{7}\hsep{8}\par
+\hsep{9}\hsep{A}\hsep{B}\par
+\hsep{C}\hsep{D}\hsep{E}\par
+\hsep{F}
 \end{document}

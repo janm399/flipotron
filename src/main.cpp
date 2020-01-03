@@ -1,19 +1,22 @@
 #include <Arduino.h>
-#include <ESP32Servo.h>
+#include "flipotron.h"
 
-Servo servo;
+StatefulFlipDigit left, right;
 
 void setup() {
   Serial.begin(115200);
-  servo.attach(18);
+  left.begin(18, 19);
+  right.begin(15, 17);
 }
 
 void loop() {
-  static int angle = 0;
-  angle++;
-  auto s = Serial.readString();
-  if (!s.isEmpty()) {
-    Serial.println("Moving to " + s);
-    servo.write(s.toInt());
+  left.markZero();
+  right.markZero();
+
+  for (int i = 0; i < StatefulFlipDigit::maximumValue; i++) {
+    left.next();
+    delay(1000);
   }
+  right.next();
+  delay(1000);
 }
