@@ -1,0 +1,38 @@
+\documentclass{article}
+\usepackage{tikz}
+\usepackage{pgffor}
+\usepackage{mdframed}
+\usepackage{multicol}
+
+\usetikzlibrary{calc}
+
+\newcommand{\hsplit}[3]{%
+  \begin{tikzpicture}
+    \begin{scope}
+      \node[inner sep=0pt,outer sep=0pt] (a) {\phantom{#1}};
+      \clip (a.south east) rectangle ($(a.west)$);
+      \node[inner sep=0pt,outer sep=0pt,text=#2]  {#1};
+    \end{scope}
+    \clip (a.north east) rectangle ($(a.west)$);
+      \node[inner sep=0pt,outer sep=0pt,text=#3]  {#1};
+  \end{tikzpicture}
+}
+
+\newcommand{\hsep}[1]{%
+  \begin{mdframed}[userdefinedwidth=100pt,userdefinedheight=50pt]
+    \begin{center}
+      \hsplit{#1}{white}{black}      
+    \end{center}
+  \end{mdframed}
+  \begin{mdframed}[userdefinedwidth=100pt]
+    \begin{center}
+      \hsplit{#1}{black}{white}      
+    \end{center}
+  \end{mdframed}
+}
+
+\begin{document}
+\begin{multicols}{3}
+\foreach \n in {0,...,9}{\fontsize{100pt}{0}\hsep{\n}} 
+\end{multicols}
+\end{document}
