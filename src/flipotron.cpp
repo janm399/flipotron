@@ -1,7 +1,7 @@
 #include "flipotron.h"
 #include <Arduino.h>
 
-constexpr int servoForward = 100;
+constexpr int servoForward = 80;
 constexpr int servoStop = 90;
 
 void FlipDigit::begin(int servoPin, int switchPin) {
