@@ -1,9 +1,12 @@
 #include <Arduino.h>
+#include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
 #include "flipotron.h"
 
 ESP8266WebServer server;
+WiFiClientSecure client;
+
 static volatile bool go = false;
 static volatile int value = 0;
 
