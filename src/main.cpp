@@ -4,6 +4,8 @@
 #include <ESP8266WiFi.h>
 #include "flipotron.h"
 
+#define WITHCLIENT 0
+
 ESP8266WebServer server;
 WiFiClientSecure client;
 
@@ -20,18 +22,18 @@ void handleRoot() {
       200, "text/html",
       "<a href='/zero?d=1'>Tens</a> | <a href='/zero?d=10'>Units</a><br/>\
               <a href='/go'>Go</a><br/>\
-              <form action='/set'><input name='v'/><input type='submit' value='Go'/></form>");
+              <form action='/set'><input name='v'/><input type='submit' value='Go'/></form>\
+              <br/><br/><br/><br/>\
+              <a href='/off'>OFF</a>");
 }
 
 void handleZero() {
-  Serial.println("zero begin");
   if (server.arg("d") == "1")
     Flipotron::instance().zeroUnits();
   else if (server.arg("d") == "10")
     Flipotron::instance().zeroTens();
   redirectIndex();
   value = 0;
-  Serial.println("zero end");
 }
 
 void handleSet() {
@@ -48,32 +50,102 @@ void handleGo() {
   redirectIndex();
 }
 
-void setup() {
-  Serial.begin(115200);
-  delay(1000);
-  Serial.println("Hi");
-  pinMode(LED_BUILTIN, OUTPUT);
+void handleOff() { ESP.deepSleep(0, RF_DISABLED); }
 
+void logSetup() {
+  Serial.begin(115200);
+  while (!Serial)
+    ;
+}
+
+void hardwareSetup() {
+  // Core Flipotron
+  pinMode(LED_BUILTIN, OUTPUT);
   Flipotron::instance().begin();
-  WiFi.softAP("Flipotron");
-  server.on("/", HTTPMethod::HTTP_GET, handleRoot);
-  server.on("/zero", HTTPMethod::HTTP_GET, handleZero);
-  server.on("/go", HTTPMethod::HTTP_GET, handleGo);
-  server.on("/set", HTTPMethod::HTTP_GET, handleSet);
-  server.begin(80);
-  Serial.print("Soft-AP IP address = ");
-  Serial.println(WiFi.softAPIP());
-  Serial.println("Done");
+}
+
+void wifiSetup() {
+// WiFi & Local AP if needed
+#if WITHCLIENT
+  WiFi.begin("EspressoMate", "qwertyuiopoiuytrewq");
+  WiFi.waitForConnectResult();
+  if (WiFi.status() != WL_CONNECTED) {
+#endif
+    WiFi.softAP("Flipotron Debug");
+    Serial.println(WiFi.status());
+    Serial.print("Soft-AP IP address = ");
+    Serial.println(WiFi.softAPIP());
+    server.on("/", HTTPMethod::HTTP_GET, handleRoot);
+    server.on("/zero", HTTPMethod::HTTP_GET, handleZero);
+    server.on("/go", HTTPMethod::HTTP_GET, handleGo);
+    server.on("/set", HTTPMethod::HTTP_GET, handleSet);
+    server.on("/off", HTTPMethod::HTTP_GET, handleOff);
+    server.begin(80);
+#if WITHCLIENT
+  } else {
+    Serial.println("Connected to EspressoMate = ");
+    Serial.println(WiFi.localIP());
+  }
+#endif
+}
+
+void setup() {
+  logSetup();
+  hardwareSetup();
+  wifiSetup();
+  Serial.println("Flipotron Ready.");
+}
+
+void sleep() {
+  Serial.println("Sleep enter");
+  WiFi.forceSleepBegin();
+  delay(60000);
+  WiFi.forceSleepWake();
+  Serial.println("Sleep leave");
 }
 
 void loop() {
-  server.handleClient();
-  server.handleClient();
-  digitalWrite(LED_BUILTIN, millis() % 1000 > 500);
+#if WITHCLIENT
+  static String host = "raw.githubusercontent.com";
+  static String url = "/janm399/flipotron/master/display.txt";
 
-  if (go) {
-    Flipotron::instance().set(value);
-    value++;
-    delay(1000);
+  if (WiFi.softAPgetStationNum() == 0) {
+    client.setInsecure();
+    if (WiFi.status() == WL_CONNECTED && client.connect(host, 443)) {
+      client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host +
+                   "\r\n" + "User-Agent: Flipotron\r\n" +
+                   "Connection: close\r\n\r\n");
+      String body = client.readString();
+      int bodyIndex = body.lastIndexOf("\r\n\r\n");
+      Serial.println("Raw body >>>");
+      Serial.println(body);
+      Serial.println("<<<");
+      if (bodyIndex != -1) {
+        body = body.substring(bodyIndex);
+        body.trim();
+        int receivedValue = body.toInt();
+        Serial.println("Body>>>");
+        Serial.println(body);
+        Serial.println("<<<");
+        Serial.println(receivedValue);
+        Flipotron::instance().set(receivedValue);
+      } else
+        Serial.println(body);
+    } else {
+      Serial.println("Not connected");
+    }
+    sleep();
+  } else
+#endif
+  {
+    server.handleClient();
+    digitalWrite(LED_BUILTIN, millis() % 1000 > 500);
+    delay(100);
+
+    if (go) {
+      Flipotron::instance().set(value);
+      value++;
+      delay(1000);
+    }
   }
 }

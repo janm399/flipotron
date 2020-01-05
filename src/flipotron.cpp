@@ -12,7 +12,6 @@ void FlipDigit::begin(int servoPin, int switchPin, int forwardSignal) {
 
 void FlipDigit::next(int factor) {
   auto signal = servoStop + (forwardSignal * factor);
-  Serial.println(signal);
   this->servo.write(signal);
   while (digitalRead(this->switchPin) == HIGH) delay(1);
   delay(100 - (factor * 5));
@@ -33,13 +32,17 @@ void FlipDigit::set(int newValue) {
     nextCount = maximumValue - this->value + newValue;
   }
 
-  if (nextCount == 1)
-    next(1);
-  else {
-    for (int i = 0; i < nextCount / 2; i++) next(2);
-    for (int i = 0; i < nextCount / 2; i++) next(1);
-  }
+  for (int i = 0; i < nextCount; i++) next(1);
+  /*
+    TODO: WTF??!!
 
+    if (nextCount == 1)
+      next(1);
+    else {
+      for (int i = 0; i < nextCount / 2; i++) next(2);
+      for (int i = 0; i < nextCount / 2; i++) next(1);
+    }
+  */
   this->value = newValue;
 }
 
