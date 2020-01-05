@@ -65,6 +65,8 @@ void setup() {
 
 void loop() {
   server.handleClient();
+  static int counter = 0;
+  server.handleClient();
   digitalWrite(LED_BUILTIN, millis() % 1000 > 500);
 
   if (go) {
