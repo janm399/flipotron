@@ -1,5 +1,5 @@
 #pragma once
-#include <ESP32Servo.h>
+#include <Servo.h>
 
 /**
  * FlipDigit drives one digit with a servo and an associated flip switch. The
@@ -7,17 +7,24 @@
  * internal pull-up.
  */
 class FlipDigit {
- protected:
+ private:
+  static constexpr int maximumValue = 10;
   Servo servo;
   int switchPin;
+  int value;
+  int forwardSignal;
 
  public:
+  void markZero();
+  void set(int newValue);
+
   /**
    * Start the interface, attach the servo and the switch PIN
    * @param servoPin the [output] IO pin for PWM 360 degree servo
    * @param switchPin the [input] IO pin for the flip detection switch
+   * @param forward (value from neutral); i.e. +10, +20; or -10 or -20.
    */
-  void begin(int servoPin, int switchPin);
+  void begin(int servoPin, int switchPin, int forwardSignal);
 
   /**
    * Move to the next position
@@ -25,13 +32,18 @@ class FlipDigit {
   void next();
 };
 
-class StatefulFlipDigit : public FlipDigit {
+class Flipotron {
  private:
-  int value;
+  Flipotron() = default;
+  FlipDigit unitsDigit;
+  FlipDigit tensDigit;
 
  public:
+  static Flipotron &instance();
+  void begin();
   void markZero();
-  void set(int newValue);
+  void set(int value);
 
-  static constexpr int maximumValue = 15;
+  void nextTens();
+  void nextUnits();
 };
