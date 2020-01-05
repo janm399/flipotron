@@ -49,7 +49,7 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
   Serial.println("Hi");
-  delay(1000);
+  pinMode(LED_BUILTIN, OUTPUT);
 
   Flipotron::instance().begin();
   WiFi.softAP("Flipotron");
@@ -65,6 +65,7 @@ void setup() {
 
 void loop() {
   server.handleClient();
+  digitalWrite(LED_BUILTIN, millis() % 1000 > 500);
 
   if (go) {
     Flipotron::instance().set(value);
