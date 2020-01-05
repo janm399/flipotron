@@ -1,32 +1,45 @@
 #include "flipotron.h"
 #include <Arduino.h>
 
-constexpr int servoForward = 80;
 constexpr int servoStop = 90;
 
 void FlipDigit::begin(int servoPin, int switchPin, int forwardSignal) {
   this->servo.attach(servoPin);
   this->switchPin = switchPin;
+  this->forwardSignal = forwardSignal;
   pinMode(this->switchPin, INPUT_PULLUP);
 }
 
-void FlipDigit::next() {
-  this->servo.write(forwardSignal);
-  while (digitalRead(this->switchPin) == HIGH) delay(10);
-  delay(100);
+void FlipDigit::next(int factor) {
+  auto signal = servoStop + (forwardSignal * factor);
+  Serial.println(signal);
+  this->servo.write(signal);
+  while (digitalRead(this->switchPin) == HIGH) delay(1);
+  delay(100 - (factor * 5));
   this->servo.write(servoStop);
 }
+
+void FlipDigit::next() { next(1); }
 
 void FlipDigit::markZero() { this->value = 0; }
 
 void FlipDigit::set(int newValue) {
   newValue = newValue % maximumValue;
 
+  int nextCount = 0;
   if (this->value <= newValue) {
-    for (int i = 0; i < newValue - this->value; i++) next();
+    nextCount = newValue - this->value;
   } else {
-    for (int i = 0; i < maximumValue - this->value + newValue; i++) next();
+    nextCount = maximumValue - this->value + newValue;
   }
+
+  if (nextCount == 1)
+    next(1);
+  else {
+    for (int i = 0; i < nextCount / 2; i++) next(2);
+    for (int i = 0; i < nextCount / 2; i++) next(1);
+  }
+
   this->value = newValue;
 }
 
@@ -38,8 +51,8 @@ Flipotron &Flipotron::instance() {
 }
 
 void Flipotron::begin() {
-  unitsDigit.begin(D8, D7, -10);
-  tensDigit.begin(D6, D5, 10);
+  unitsDigit.begin(D8, D7, -25);
+  tensDigit.begin(D6, D5, 25);
 }
 
 void Flipotron::set(int value) {
@@ -48,10 +61,11 @@ void Flipotron::set(int value) {
   tensDigit.set(value / 10);
 }
 
-void Flipotron::markZero() {
+void Flipotron::zeroTens() {
+  tensDigit.next();
   unitsDigit.markZero();
+}
+void Flipotron::zeroUnits() {
+  unitsDigit.next();
   tensDigit.markZero();
 }
-
-void Flipotron::nextTens() { tensDigit.next(); }
-void Flipotron::nextUnits() { unitsDigit.next(); }

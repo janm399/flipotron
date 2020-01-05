@@ -14,6 +14,8 @@ class FlipDigit {
   int value;
   int forwardSignal;
 
+  void next(int factor);
+
  public:
   void markZero();
   void set(int newValue);
@@ -41,9 +43,8 @@ class Flipotron {
  public:
   static Flipotron &instance();
   void begin();
-  void markZero();
   void set(int value);
 
-  void nextTens();
-  void nextUnits();
+  void zeroTens();
+  void zeroUnits();
 };
